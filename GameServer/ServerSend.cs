@@ -8,21 +8,24 @@ namespace GameServer
 {
     public class ServerSend
     {
-        public static void SendPackageToClient(int _id, Package _package)
+        public static void SendPackageToClient(int from, int _id, Package _package)
         {
-            GameServer.instance.SendToClient(_id, _package);
+            Package _toSend = new Package();
+            _toSend.WriteInt(from);
+            _toSend.WriteInt(_id);
+            _toSend.Write(_package.GetAllBytes());
+            GameServer.instance.SendToClient(_id, _toSend);
         }
         public static void SendBroadcast(int _from, Package _package)
         {
-            _package.myBytes.RemoveRange(0, 4);
-            Console.WriteLine("Bytes to broadcast: " + _package.myBytes.Count);
+            Console.WriteLine("Bytes to broadcast: " + _package.GetAllBytes().Length);
             for(int i = 0; i <= GameServer.instance.maxPlayers; i++)
             {
                 if(i != _from)
                 {
                     try
                     {
-                        SendPackageToClient(i, _package);
+                        SendPackageToClient(_from, i, _package);
                     }
                     catch (Exception) { }
                 }
@@ -30,8 +33,7 @@ namespace GameServer
         }
         public static void SendWelcomePackage(int id)
         {
-            Package p = new Package(new ASCIIEncoding().GetBytes("Welcome to this server"));
-            ServerSend.SendPackageToClient(id, p);
+            ServerSend.SendPackageToClient(-1, id, Packages.PlayerWelcomePackage("Welcome to this server"));
         }
     }
 }

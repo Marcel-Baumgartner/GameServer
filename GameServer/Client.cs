@@ -38,8 +38,12 @@ namespace GameServer
         }
         public void Disconnect()
         {
-            Console.WriteLine("Disconnecting client " + id);
-            client.Close();
+            try
+            {
+                Console.WriteLine("Disconnecting client " + id);
+                client.Close();
+            }
+            catch (Exception) { }
         }
 
         public void SendBytes(byte[] _data)
@@ -80,7 +84,11 @@ namespace GameServer
 
             HandlePackage.Handle(id, new Package(data));
 
-            socket.BeginReceive(cache, 0, bufferSize, SocketFlags.None, ReceiveCallback, null);
+            try
+            {
+                socket.BeginReceive(cache, 0, bufferSize, SocketFlags.None, ReceiveCallback, null);
+            }
+            catch (Exception) { }
         }
     }
 }

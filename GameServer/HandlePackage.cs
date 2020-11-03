@@ -10,29 +10,40 @@ namespace GameServer
     {
         public static void Handle(int _from, Package _package)
         {
-            if (_package.GetBytes().Length < 5)
+            try
             {
-                Console.WriteLine("An unknow package has been received. -> diconnecting client " + _from);
-                GameServer.instance.DisconnectClient(_from);
-            }
-
-            int id = BitConverter.ToInt32(_package.GetBytes(), 0);
-
-            switch(id)
-            {
-                case 0: //Broadcast
-                    ServerSend.SendBroadcast(_from, _package);
-                    break;
-                case 1:
-                    _package.myBytes.RemoveRange(0, 4);
-                    int targetId = BitConverter.ToInt32(_package.myBytes.ToArray(), 0);
-                    _package.myBytes.RemoveRange(0, 4);
-                    ServerSend.SendPackageToClient(targetId, _package);
-                    break;
-                default:
+                if (_package.GetAllBytes().Length < 5)
+                {
                     Console.WriteLine("An unknow package has been received. -> diconnecting client " + _from);
                     GameServer.instance.DisconnectClient(_from);
-                    break;
+                    return;
+                }
+
+                int id = BitConverter.ToInt32(_package.GetAllBytes(), 0);
+
+                switch (id)
+                {
+                    case 0: //Broadcast
+                        _package.myBytes.RemoveRange(0, 8);
+                        ServerSend.SendBroadcast(_from, _package);
+                        break;
+                    case 1:
+                        _package.ReadInt();
+                        int target = _package.ReadInt();
+                        _package.myBytes.RemoveRange(0, 8);
+                        ServerSend.SendPackageToClient(_from, target, _package);
+                        break;
+                    default:
+                        Console.WriteLine("An unknow package has been received. -> diconnecting client " + _from);
+                        GameServer.instance.DisconnectClient(_from);
+                        break;
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine("Error at handling package from " + _from + " -> disconnecting");
+                Console.WriteLine("Error: " + ex.ToString());
+                GameServer.instance.DisconnectClient(_from);
             }
         }
     }

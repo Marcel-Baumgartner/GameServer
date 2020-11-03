@@ -58,12 +58,14 @@ namespace GameServer
             Client c = clients[_id];
             c.Disconnect();
             clients.Remove(_id);
+            ServerSend.SendBroadcast(-1, Packages.PlayerDisconnectPackage(_id));
         }
         public void SendToClient(int _id, Package _package)
         {
             try
             {
-                clients[_id].SendBytes(_package.GetBytes());
+                Console.WriteLine("Sending Package. Size: " + _package.GetLenght());
+                clients[_id].SendBytes(_package.GetAllBytes());
             }
             catch (Exception ex)
             {
@@ -87,6 +89,7 @@ namespace GameServer
                     clients.Add(i, c);
                     Console.WriteLine("Client sucessfully connected");
                     ServerSend.SendWelcomePackage(i);
+                    ServerSend.SendBroadcast(-1, Packages.PlayerJoinedPackage(i));
                     return;
                 }
                 i++;
